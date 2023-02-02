@@ -1,1 +1,1 @@
-# velero-data-mover-plugin
+# velero-plugin-for-vsm
