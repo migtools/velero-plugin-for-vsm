@@ -20,6 +20,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/vmware-tanzu/velero-plugin-for-csi/internal/backup"
+	"github.com/vmware-tanzu/velero-plugin-for-csi/internal/restore"
 	veleroplugin "github.com/vmware-tanzu/velero/pkg/plugin/framework"
 )
 
@@ -28,6 +29,10 @@ func main() {
 		BindFlags(pflag.CommandLine).
 		RegisterBackupItemAction("velero.io/vsm-volumesnapshotcontent-backupper", newVolumeSnapContentBackupItemAction).
 		RegisterBackupItemAction("velero.io/vsm-volumesnapshotbackup-backupper", newVolumeSnapshotBackupBackupItemAction).
+		RegisterRestoreItemAction("velero.io/vsm-volumesnapshot-restorer", newVolumeSnapshotRestoreItemAction).
+		RegisterRestoreItemAction("velero.io/vsm-volumesnapshotclass-restorer", newVolumeSnapshotClassRestoreItemAction).
+		RegisterRestoreItemAction("velero.io/vsm-volumesnapshotcontent-restorer", newVolumeSnapshotContentRestoreItemAction).
+		RegisterRestoreItemAction("velero.io/vsm-datamover-restorer", newVolumeSnapshotRestoreRestoreItemAction).
 		Serve()
 }
 
@@ -37,4 +42,20 @@ func newVolumeSnapContentBackupItemAction(logger logrus.FieldLogger) (interface{
 
 func newVolumeSnapshotBackupBackupItemAction(logger logrus.FieldLogger) (interface{}, error) {
 	return &backup.VolumeSnapshotBackupBackupItemAction{Log: logger}, nil
+}
+
+func newVolumeSnapshotRestoreItemAction(logger logrus.FieldLogger) (interface{}, error) {
+	return &restore.VolumeSnapshotRestoreItemAction{Log: logger}, nil
+}
+
+func newVolumeSnapshotClassRestoreItemAction(logger logrus.FieldLogger) (interface{}, error) {
+	return &restore.VolumeSnapshotClassRestoreItemAction{Log: logger}, nil
+}
+
+func newVolumeSnapshotContentRestoreItemAction(logger logrus.FieldLogger) (interface{}, error) {
+	return &restore.VolumeSnapshotContentRestoreItemAction{Log: logger}, nil
+}
+
+func newVolumeSnapshotRestoreRestoreItemAction(logger logrus.FieldLogger) (interface{}, error) {
+	return &restore.VolumeSnapshotRestoreRestoreItemAction{Log: logger}, nil
 }
