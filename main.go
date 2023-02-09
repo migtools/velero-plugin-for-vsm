@@ -20,6 +20,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/vmware-tanzu/velero-plugin-for-csi/internal/backup"
+	"github.com/vmware-tanzu/velero-plugin-for-csi/internal/delete"
 	veleroplugin "github.com/vmware-tanzu/velero/pkg/plugin/framework"
 )
 
@@ -28,6 +29,7 @@ func main() {
 		BindFlags(pflag.CommandLine).
 		RegisterBackupItemAction("velero.io/vsm-volumesnapshotcontent-backupper", newVolumeSnapContentBackupItemAction).
 		RegisterBackupItemAction("velero.io/vsm-volumesnapshotbackup-backupper", newVolumeSnapshotBackupBackupItemAction).
+		RegisterDeleteItemAction("velero.io/csi-volumesnapshotbackup-delete", newVolumeSnapshotBackupDeleteItemAction).
 		Serve()
 }
 
@@ -37,4 +39,8 @@ func newVolumeSnapContentBackupItemAction(logger logrus.FieldLogger) (interface{
 
 func newVolumeSnapshotBackupBackupItemAction(logger logrus.FieldLogger) (interface{}, error) {
 	return &backup.VolumeSnapshotBackupBackupItemAction{Log: logger}, nil
+}
+
+func newVolumeSnapshotBackupDeleteItemAction(logger logrus.FieldLogger) (interface{}, error) {
+	return &delete.VolumeSnapshotBackupDeleteItemAction{Log: logger}, nil
 }
