@@ -3,7 +3,7 @@ package backup
 import (
 	"context"
 	"fmt"
-	"github.com/vmware-tanzu/velero-plugin-for-csi/util"
+	"github.com/vmware-tanzu/velero-plugin-for-csi/internal/util"
 
 	datamoverv1alpha1 "github.com/konveyor/volume-snapshot-mover/api/v1alpha1"
 	snapshotv1api "github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1"
