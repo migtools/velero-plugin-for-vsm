@@ -31,7 +31,6 @@ func main() {
 		RegisterBackupItemAction("velero.io/vsm-volumesnapshotbackup-backupper", newVolumeSnapshotBackupBackupItemAction).
 		RegisterRestoreItemAction("velero.io/vsm-volumesnapshot-restorer", newVolumeSnapshotRestoreItemAction).
 		RegisterRestoreItemAction("velero.io/vsm-volumesnapshotclass-restorer", newVolumeSnapshotClassRestoreItemAction).
-		RegisterRestoreItemAction("velero.io/vsm-volumesnapshotcontent-restorer", newVolumeSnapshotContentRestoreItemAction).
 		RegisterRestoreItemAction("velero.io/vsm-datamover-restorer", newVolumeSnapshotRestoreRestoreItemAction).
 		Serve()
 }
@@ -50,10 +49,6 @@ func newVolumeSnapshotRestoreItemAction(logger logrus.FieldLogger) (interface{},
 
 func newVolumeSnapshotClassRestoreItemAction(logger logrus.FieldLogger) (interface{}, error) {
 	return &restore.VolumeSnapshotClassRestoreItemAction{Log: logger}, nil
-}
-
-func newVolumeSnapshotContentRestoreItemAction(logger logrus.FieldLogger) (interface{}, error) {
-	return &restore.VolumeSnapshotContentRestoreItemAction{Log: logger}, nil
 }
 
 func newVolumeSnapshotRestoreRestoreItemAction(logger logrus.FieldLogger) (interface{}, error) {
