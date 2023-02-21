@@ -70,6 +70,7 @@ func (p *VolumeSnapshotRestoreItemAction) Execute(input *velero.RestoreItemActio
 	}
 
 	var snapHandle string
+	var snapName string
 	if util.DataMoverCase() {
 
 		err := util.WaitForVolumeSnapshotSourceToBeReady(&vs, p.Log)
@@ -85,6 +86,7 @@ func (p *VolumeSnapshotRestoreItemAction) Execute(input *velero.RestoreItemActio
 		// this will always be unique
 		if len(vsrList.Items) > 0 {
 			snapHandle = vsrList.Items[0].Status.SnapshotHandle
+			snapName = vsrList.Items[0].Status.VolumeSnapshotContentName
 
 		} else {
 			return nil, errors.Wrapf(err, fmt.Sprintf("volumesnapshotrestore list is empty for PVC %s", *vs.Spec.Source.PersistentVolumeClaimName))
@@ -139,6 +141,12 @@ func (p *VolumeSnapshotRestoreItemAction) Execute(input *velero.RestoreItemActio
 
 	// Reset VolumeSnapshot annotation. By now, only change DeletionPolicy to Retain.
 	resetVolumeSnapshotAnnotation(&vs)
+
+	// Delete extra volumeSnapshotContent used for snaphandle
+	err = util.DeleteVolumeSnapshotContent(snapName, snapClient.SnapshotV1(), p.Log)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 
 	vsMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&vs)
 	if err != nil {
