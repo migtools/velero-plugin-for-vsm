@@ -96,6 +96,12 @@ func (p *VolumeSnapshotContentBackupItemAction) Execute(item runtime.Unstructure
 			return nil, nil, errors.WithStack(err)
 		}
 
+		// get custom CA secret name for restic
+		resticCustomCASecretName, err := util.GetResticCustomCASecretName(backup, backup.Namespace, p.Log)
+		if err != nil {
+			return nil, nil, errors.WithStack(err)
+		}
+
 		// craft a VolumeBackupSnapshot object to be created
 		vsb := datamoverv1alpha1.VolumeSnapshotBackup{
 			ObjectMeta: metav1.ObjectMeta{
@@ -114,6 +120,12 @@ func (p *VolumeSnapshotContentBackupItemAction) Execute(item runtime.Unstructure
 					Name: resticSecretName,
 				},
 			},
+		}
+
+		if resticCustomCASecretName != "" {
+			vsb.Spec.ResticCustomCASecretRef = corev1api.LocalObjectReference{
+				Name: resticCustomCASecretName,
+			}
 		}
 
 		// check if VolumeBackupSnapshot CR exists for VSC

@@ -71,6 +71,12 @@ func (p *VolumeSnapshotRestoreRestoreItemAction) Execute(input *velero.RestoreIt
 		},
 	}
 
+	if vsb.Spec.ResticCustomCASecretRef != "" {
+		vsr.Spec.ResticCustomCASecretRef = corev1api.LocalObjectReference{
+			Name: vsb.Spec.ResticCustomCASecretRef,
+		}
+	}
+
 	// if namespace mapping is specified
 	if val, ok := input.Restore.Spec.NamespaceMapping[vsr.GetNamespace()]; ok {
 		vsr.SetNamespace(val)

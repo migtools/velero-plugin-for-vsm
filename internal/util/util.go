@@ -486,6 +486,24 @@ func GetDataMoverCredName(backup *velerov1api.Backup, protectedNS string, log lo
 	return resticSecretName, nil
 }
 
+func GetResticCustomCASecretName(backup *velerov1api.Backup, protectedNS string, log logrus.FieldLogger) (string, error) {
+
+	bslName := backup.Spec.StorageLocation
+	resticCustomCAName := fmt.Sprintf("%v-volsync-restic-customca", bslName)
+
+	secretClient, _, err := GetClients()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	// check this secret exists
+	if _, err := secretClient.CoreV1().Secrets(protectedNS).Get(context.TODO(), resticCustomCAName, metav1.GetOptions{}); err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	return resticCustomCAName, nil
+}
+
 func CheckIfVolumeSnapshotRestoresAreComplete(ctx context.Context, volumesnapshotrestores datamoverv1alpha1.VolumeSnapshotRestoreList, log logrus.FieldLogger) error {
 	eg, _ := errgroup.WithContext(ctx)
 	timeoutValue := "10m"
