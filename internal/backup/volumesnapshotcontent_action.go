@@ -19,17 +19,16 @@ package backup
 import (
 	"context"
 	"fmt"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
-
 	snapshotv1api "github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
+	"time"
 
 	datamoverv1alpha1 "github.com/konveyor/volume-snapshot-mover/api/v1alpha1"
 	"github.com/vmware-tanzu/velero-plugin-for-csi/internal/util"
@@ -192,8 +191,11 @@ func (p *VolumeSnapshotContentBackupItemActionV2) Progress(operationID string, b
 	}
 
 	// update progress status via VSB phases
-	if vsb.Status.Phase != "" {
-		progress.Description = string(vsb.Status.Phase)
+	if vsb.Status.Phase != "" && vsb.Status.BatchingStatus != "" {
+		progressDescriptionPhase := string(vsb.Status.Phase)
+		progressDescriptionBatchingStatus := string(vsb.Status.BatchingStatus)
+		progress.Description = "Phase: " + progressDescriptionPhase + " BatchingStatus: " + progressDescriptionBatchingStatus
+		p.Log.Infof("current progress description is: %s", progress.Description)
 		if vsb.Status.Phase == datamoverv1alpha1.SnapMoverBackupPhaseCompleted {
 			progress.Completed = true
 		}
@@ -208,10 +210,8 @@ func (p *VolumeSnapshotContentBackupItemActionV2) Progress(operationID string, b
 		progress.Started = vsb.Status.StartTimestamp.Time
 	}
 
-	// treating progress updated field as completion timestamp
-	if vsb.Status.CompletionTimestamp != nil {
-		progress.Updated = vsb.Status.CompletionTimestamp.Time
-	}
+	// mark updated timestamp
+	progress.Updated = time.Now()
 
 	return progress, nil
 }
