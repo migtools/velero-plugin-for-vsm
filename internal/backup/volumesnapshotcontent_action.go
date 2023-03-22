@@ -140,7 +140,7 @@ func (p *VolumeSnapshotContentBackupItemActionV2) Execute(item runtime.Unstructu
 
 			p.Log.Infof("Created volumesnapshotbackup %s", fmt.Sprintf("%s/%s", vsb.Namespace, vsb.Name))
 
-			// Now fetch the VSB so that we get the UID from VSB metadata and return that as operationID to be used for progress monitoring
+			// Now fetch the VSB so that we get the Name of the VSB as we use generate name for VSB CR creation
 			err = vsbClient.Get(context.Background(), client.ObjectKey{Namespace: vsb.Namespace, Name: vsb.Name}, &vsb)
 			if err != nil {
 				return nil, nil, "", nil, errors.Wrapf(err, "error fetching volumesnapshotbackup CR for suppyling operationID")
@@ -166,8 +166,6 @@ func (p *VolumeSnapshotContentBackupItemActionV2) Execute(item runtime.Unstructu
 
 func (p *VolumeSnapshotContentBackupItemActionV2) Progress(operationID string, backup *velerov1api.Backup) (velero.OperationProgress, error) {
 	progress := velero.OperationProgress{}
-	p.Log.Infof("Backup name in progress method is: %s", backup.Name)
-	p.Log.Infof("OperationID in progress method is: %s", operationID)
 
 	// handle empty operationID case
 	if operationID == "" {
@@ -182,6 +180,10 @@ func (p *VolumeSnapshotContentBackupItemActionV2) Progress(operationID string, b
 	}
 
 	splitOperationID := strings.Split(operationID, "/")
+	if len(splitOperationID) != 2 {
+		return progress, biav2.InvalidOperationIDError(operationID)
+	}
+
 	VSBNamespace := splitOperationID[0]
 	VSBName := splitOperationID[1]
 
@@ -196,12 +198,14 @@ func (p *VolumeSnapshotContentBackupItemActionV2) Progress(operationID string, b
 		progressDescriptionBatchingStatus := string(vsb.Status.BatchingStatus)
 		progress.Description = "Phase: " + progressDescriptionPhase + " BatchingStatus: " + progressDescriptionBatchingStatus
 		p.Log.Infof("current progress description is: %s", progress.Description)
+
 		if vsb.Status.Phase == datamoverv1alpha1.SnapMoverBackupPhaseCompleted {
 			progress.Completed = true
 		}
 
 		if vsb.Status.Phase == datamoverv1alpha1.SnapMoverBackupPhaseFailed {
 			progress.Err = "VolumeSnapshotBackup has a failed status"
+			progress.Completed = true
 		}
 	}
 
