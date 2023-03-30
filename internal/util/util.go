@@ -375,7 +375,7 @@ func GetVolumeSnapshotRestoreWithStatusData(restoreName string, PVCName string, 
 		}
 
 		if len(vsrList.Items) > 0 {
-			if vsrList.Items[0].Status.Phase == "Failed" {
+			if vsrList.Items[0].Status.Phase == "Failed" || vsrList.Items[0].Status.Phase == "PartiallyFailed" {
 				return false, errors.Errorf("volumesnapshotrestore %v has failed status", vsrList.Items[0].Name)
 			}
 
