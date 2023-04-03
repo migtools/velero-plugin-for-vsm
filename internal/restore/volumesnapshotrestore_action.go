@@ -18,19 +18,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// VolumeSnapshotRestoreRestoreItemActionV2 is a restore item action plugin to retrieve
+// VolumeSnapshotBackupRestoreItemActionV2 is a restore item action plugin to retrieve
 // VolumeSnapshotBackup from backup and create VolumeSnapshotRestore
-type VolumeSnapshotRestoreRestoreItemActionV2 struct {
+type VolumeSnapshotBackupRestoreItemActionV2 struct {
 	Log logrus.FieldLogger
 }
 
-func (p *VolumeSnapshotRestoreRestoreItemActionV2) Name() string {
-	return "VolumeSnapshotRestoreRestoreItemActionV2"
+func (p *VolumeSnapshotBackupRestoreItemActionV2) Name() string {
+	return "VolumeSnapshotBackupRestoreItemActionV2"
 }
 
-// AppliesTo returns information indicating that the VolumeSnapshotRestoreRestoreItemAction should be invoked
-func (p *VolumeSnapshotRestoreRestoreItemActionV2) AppliesTo() (velero.ResourceSelector, error) {
-	p.Log.Info("VolumeSnapshotRestoreRestoreItemAction AppliesTo")
+// AppliesTo returns information indicating that the VolumeSnapshotBackupRestoreItemAction should be invoked
+func (p *VolumeSnapshotBackupRestoreItemActionV2) AppliesTo() (velero.ResourceSelector, error) {
+	p.Log.Info("VolumeSnapshotBackupRestoreItemAction AppliesTo")
 
 	return velero.ResourceSelector{
 		IncludedResources: []string{"volumesnapshotbackups.datamover.oadp.openshift.io"},
@@ -38,9 +38,9 @@ func (p *VolumeSnapshotRestoreRestoreItemActionV2) AppliesTo() (velero.ResourceS
 }
 
 // Execute backs up a VolumeSnapshotBackup object with a completely filled status
-func (p *VolumeSnapshotRestoreRestoreItemActionV2) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
+func (p *VolumeSnapshotBackupRestoreItemActionV2) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
 
-	p.Log.Infof("Executing VolumeSnapshotRestoreRestoreItemActionV2")
+	p.Log.Infof("Executing VolumeSnapshotBackupRestoreItemActionV2")
 	p.Log.Infof("Executing on item: %v", input.Item)
 	vsb := datamoverv1alpha1.VolumeSnapshotBackup{}
 
@@ -102,7 +102,7 @@ func (p *VolumeSnapshotRestoreRestoreItemActionV2) Execute(input *velero.Restore
 	// operationID for our datamover usecase is VSR NamespacedName which will unique per operation
 	operationID = vsr.Namespace + "/" + vsr.Name
 
-	p.Log.Info("Returning from VolumeSnapshotRestoreRestoreItemActionV2")
+	p.Log.Info("Returning from VolumeSnapshotBackupRestoreItemActionV2")
 
 	// don't restore VSB
 	return &velero.RestoreItemActionExecuteOutput{
@@ -110,7 +110,7 @@ func (p *VolumeSnapshotRestoreRestoreItemActionV2) Execute(input *velero.Restore
 	}, nil
 }
 
-func (p *VolumeSnapshotRestoreRestoreItemActionV2) Progress(operationID string, restore *v1.Restore) (velero.OperationProgress, error) {
+func (p *VolumeSnapshotBackupRestoreItemActionV2) Progress(operationID string, restore *v1.Restore) (velero.OperationProgress, error) {
 	progress := velero.OperationProgress{}
 
 	// handle empty operationID case
@@ -168,10 +168,10 @@ func (p *VolumeSnapshotRestoreRestoreItemActionV2) Progress(operationID string, 
 	return progress, nil
 }
 
-func (p *VolumeSnapshotRestoreRestoreItemActionV2) Cancel(operationID string, restore *v1.Restore) error {
+func (p *VolumeSnapshotBackupRestoreItemActionV2) Cancel(operationID string, restore *v1.Restore) error {
 	return nil
 }
 
-func (p *VolumeSnapshotRestoreRestoreItemActionV2) AreAdditionalItemsReady(additionalItems []velero.ResourceIdentifier, restore *v1.Restore) (bool, error) {
+func (p *VolumeSnapshotBackupRestoreItemActionV2) AreAdditionalItemsReady(additionalItems []velero.ResourceIdentifier, restore *v1.Restore) (bool, error) {
 	return true, nil
 }
