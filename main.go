@@ -31,8 +31,7 @@ func main() {
 		RegisterBackupItemActionV2("velero.io/vsm-volumesnapshotcontent-backupper", newVolumeSnapContentBackupItemActionV2).
 		RegisterBackupItemAction("velero.io/vsm-volumesnapshotbackup-backupper", newVolumeSnapshotBackupBackupItemAction).
 		RegisterRestoreItemAction("velero.io/vsm-volumesnapshot-restorer", newVolumeSnapshotRestoreItemAction).
-		RegisterRestoreItemAction("velero.io/vsm-volumesnapshotclass-restorer", newVolumeSnapshotClassRestoreItemAction).
-		RegisterRestoreItemAction("velero.io/vsm-datamover-restorer", newVolumeSnapshotRestoreRestoreItemAction).
+		RegisterRestoreItemActionV2("velero.io/vsm-datamover-restorer", newVolumeSnapshotBackupRestoreItemActionV2).
 		RegisterDeleteItemAction("velero.io/csi-volumesnapshotbackup-delete", newVolumeSnapshotBackupDeleteItemAction).
 		Serve()
 }
@@ -49,12 +48,8 @@ func newVolumeSnapshotRestoreItemAction(logger logrus.FieldLogger) (interface{},
 	return &restore.VolumeSnapshotRestoreItemAction{Log: logger}, nil
 }
 
-func newVolumeSnapshotClassRestoreItemAction(logger logrus.FieldLogger) (interface{}, error) {
-	return &restore.VolumeSnapshotClassRestoreItemAction{Log: logger}, nil
-}
-
-func newVolumeSnapshotRestoreRestoreItemAction(logger logrus.FieldLogger) (interface{}, error) {
-	return &restore.VolumeSnapshotRestoreRestoreItemAction{Log: logger}, nil
+func newVolumeSnapshotBackupRestoreItemActionV2(logger logrus.FieldLogger) (interface{}, error) {
+	return &restore.VolumeSnapshotBackupRestoreItemActionV2{Log: logger}, nil
 }
 
 func newVolumeSnapshotBackupDeleteItemAction(logger logrus.FieldLogger) (interface{}, error) {
