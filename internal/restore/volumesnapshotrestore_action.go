@@ -168,10 +168,12 @@ func (p *VolumeSnapshotBackupRestoreItemActionV2) Progress(operationID string, r
 	return progress, nil
 }
 
+// empty func to satisfy riav2 interface
 func (p *VolumeSnapshotBackupRestoreItemActionV2) Cancel(operationID string, restore *v1.Restore) error {
 	return nil
 }
 
+// empty func to satisfy riav2 interface
 func (p *VolumeSnapshotBackupRestoreItemActionV2) AreAdditionalItemsReady(additionalItems []velero.ResourceIdentifier, restore *v1.Restore) (bool, error) {
 	return true, nil
 }
