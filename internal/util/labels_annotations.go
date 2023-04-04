@@ -53,4 +53,5 @@ const (
 	// RestoreNameLabel is the label key used to identify a restore by name.
 	RestoreNameLabel           = "velero.io/restore-name"
 	PersistentVolumeClaimLabel = "velero.io/persistent-volume-claim-name"
+	VolumeSnapshotBackupLabel  = "velero.io/vsb-name"
 )
