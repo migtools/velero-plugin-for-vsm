@@ -628,3 +628,24 @@ func DeleteVolumeSnapshotContent(snapContName string, snapshotClient snapshotter
 	}
 	return nil
 }
+
+func GetVSRsFromBackup(backupName string) (datamoverv1alpha1.VolumeSnapshotRestoreList, error) {
+
+	vsrList := datamoverv1alpha1.VolumeSnapshotRestoreList{}
+	snapMoverClient, err := GetVolumeSnapshotMoverClient()
+	if err != nil {
+		return vsrList, err
+	}
+
+	// get VSR(s) associated with specific backup VSB
+	vsrListOptions := client.MatchingLabels(map[string]string{
+		velerov1api.BackupNameLabel: backupName,
+	})
+
+	err = snapMoverClient.List(context.TODO(), &vsrList, vsrListOptions)
+	if err != nil {
+		return vsrList, err
+	}
+
+	return vsrList, nil
+}

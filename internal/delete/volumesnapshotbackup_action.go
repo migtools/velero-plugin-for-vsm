@@ -31,8 +31,13 @@ func (p *VolumeSnapshotBackupDeleteItemAction) Execute(input *velero.DeleteItemA
 	p.Log.Info("Starting VolumeSnapshotBackupDeleteItemAction for volumeSnapshotbackup")
 
 	vsb := datamoverv1alpha1.VolumeSnapshotBackup{}
+	vsr := datamoverv1alpha1.VolumeSnapshotRestore{}
 
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(input.Item.UnstructuredContent(), &vsb); err != nil {
+		return errors.Wrapf(err, "failed to convert input.Item from unstructured")
+	}
+
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(input.Item.UnstructuredContent(), &vsr); err != nil {
 		return errors.Wrapf(err, "failed to convert input.Item from unstructured")
 	}
 
@@ -54,5 +59,22 @@ func (p *VolumeSnapshotBackupDeleteItemAction) Execute(input *velero.DeleteItemA
 	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
+
+	// delete any associated VSR(s)
+	vsrList, err := util.GetVSRsFromBackup(input.Backup.Name)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get VSRs from relevant Backup")
+	}
+
+	if len(vsrList.Items) > 0 {
+		for _, vsr := range vsrList.Items {
+
+			err = snapMoverClient.Delete(context.TODO(), &vsr)
+			if err != nil && !apierrors.IsNotFound(err) {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
