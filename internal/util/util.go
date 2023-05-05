@@ -399,28 +399,54 @@ func GetVolumeSnapshotRestoreWithStatusData(restoreName string, PVCName string, 
 }
 
 // Check if volumesnapshotbackup CR exists for a given volumesnapshotcontent
-func DoesVolumeSnapshotBackupExistForVSC(snapCont *snapshotv1api.VolumeSnapshotContent, log logrus.FieldLogger) (bool, error) {
+func VSBExistsForVSC(snapCont *snapshotv1api.VolumeSnapshotContent, log logrus.FieldLogger) (bool, error) {
+
 	snapMoverClient, err := GetVolumeSnapshotMoverClient()
 	if err != nil {
 		return false, err
 	}
-	vsb := datamoverv1alpha1.VolumeSnapshotBackup{}
+	vsbList := datamoverv1alpha1.VolumeSnapshotBackupList{}
+	VSBListOptions := client.MatchingLabels(map[string]string{
+		VolumeSnapshotBackupVolumeSnapshotContent: snapCont.Name,
+	})
 
-	err = snapMoverClient.Get(context.TODO(), client.ObjectKey{Namespace: snapCont.Spec.VolumeSnapshotRef.Namespace, Name: fmt.Sprint("vsb-" + snapCont.Spec.VolumeSnapshotRef.Name)}, &vsb)
+	err = snapMoverClient.List(context.TODO(), &vsbList, VSBListOptions)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			log.Infof("could not find volumesnapshotbackup for the given volumesnapshotcontent")
-			return false, nil
+		if apierrors.IsAlreadyExists(err) {
+			log.Infof("found volumesnapshotbackup for the given volumesnapshotcontent")
+			return true, nil
 		}
 		return false, err
 	}
 
-	if len(vsb.Spec.VolumeSnapshotContent.Name) > 0 && vsb.Spec.VolumeSnapshotContent.Name == snapCont.Name {
-		log.Infof("found volumesnapshotbackup for the given volumesnapshotcontent")
-		return true, nil
+	log.Infof("did not find volumesnapshotbackup for the given volumesnapshotcontent %v", snapCont.Name)
+	return false, nil
+}
+
+// Check if volumesnapshotrestore CR exists for a given volumesnapshotbackup
+func VSRExistsForVSB(vsb *datamoverv1alpha1.VolumeSnapshotBackup, log logrus.FieldLogger) (bool, error) {
+
+	snapMoverClient, err := GetVolumeSnapshotMoverClient()
+	if err != nil {
+		return false, err
 	}
-	log.Infof("could not find volumesnapshotbackup for the given volumesnapshotcontent")
-	return false, err
+
+	vsrList := datamoverv1alpha1.VolumeSnapshotRestoreList{}
+	VSRListOptions := client.MatchingLabels(map[string]string{
+		VolumeSnapshotBackupLabel: vsb.Name,
+	})
+
+	err = snapMoverClient.List(context.TODO(), &vsrList, VSRListOptions)
+	if err != nil {
+		if apierrors.IsAlreadyExists(err) {
+			log.Infof("found volumesnapshotrestore for the given volumesnapshotbackup")
+			return true, nil
+		}
+		return false, err
+	}
+
+	log.Infof("did not find volumesnapshotrestore for the given volumesnapshotbackup %v", vsb.Name)
+	return false, nil
 }
 
 //Waits for volumesnapshotcontent to be in ready state
