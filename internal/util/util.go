@@ -19,6 +19,7 @@ package util
 import (
 	"context"
 	"fmt"
+	volsyncv1alpha1 "github.com/backube/volsync/api/v1alpha1"
 	"os"
 	"strconv"
 	"strings"
@@ -459,6 +460,16 @@ func GetVolumeSnapshotMoverClient() (client.Client, error) {
 	return client2, err
 }
 
+func GetVolsyncClient() (client.Client, error) {
+	client2, err := client.New(config.GetConfigOrDie(), client.Options{})
+	if err != nil {
+		return nil, err
+	}
+	volsyncv1alpha1.AddToScheme(client2.Scheme())
+
+	return client2, err
+}
+
 // We expect VolumeSnapshotMoverEnv to be set once when container is started.
 // When true, we will use the csi data-mover code path.
 var dataMoverCase, _ = strconv.ParseBool(os.Getenv(VolumeSnapshotMoverEnv))
@@ -649,4 +660,25 @@ func GetVSRsFromBackup(backupName string, vsbName string) (datamoverv1alpha1.Vol
 	}
 
 	return vsrList, nil
+}
+
+func GetReplicationSourcesForVSB(vsbName string) (volsyncv1alpha1.ReplicationSourceList, error) {
+
+	rsList := volsyncv1alpha1.ReplicationSourceList{}
+	volsyncClient, err := GetVolsyncClient()
+	if err != nil {
+		return rsList, err
+	}
+
+	// get RS(s) associated with specific VSB
+	rsListOptions := client.MatchingLabels(map[string]string{
+		VSBLabel: vsbName,
+	})
+
+	err = volsyncClient.List(context.TODO(), &rsList, rsListOptions)
+	if err != nil {
+		return rsList, err
+	}
+
+	return rsList, nil
 }
