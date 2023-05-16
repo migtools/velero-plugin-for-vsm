@@ -55,4 +55,5 @@ const (
 	RestoreNameLabel           = "velero.io/restore-name"
 	PersistentVolumeClaimLabel = "velero.io/persistent-volume-claim-name"
 	VolumeSnapshotBackupLabel  = "velero.io/vsb-name"
+	VSBLabel                   = "datamover.oadp.openshift.io/vsb"
 )

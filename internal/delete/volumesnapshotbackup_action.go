@@ -50,9 +50,30 @@ func (p *VolumeSnapshotBackupDeleteItemAction) Execute(input *velero.DeleteItemA
 		return err
 	}
 
+	volsyncClient, err := util.GetVolsyncClient()
+	if err != nil {
+		return err
+	}
+
 	err = snapMoverClient.Delete(context.TODO(), &vsb)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return err
+	}
+
+	// Delete any associated RS(s) for VSB
+	rsList, err := util.GetReplicationSourcesForVSB(vsb.Name)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get ReplicationSource(s) relevant to VSB")
+	}
+
+	if len(rsList.Items) > 0 {
+		for _, rs := range rsList.Items {
+
+			err = volsyncClient.Delete(context.TODO(), &rs)
+			if err != nil && !apierrors.IsNotFound(err) {
+				return err
+			}
+		}
 	}
 
 	// delete any associated VSR(s)
