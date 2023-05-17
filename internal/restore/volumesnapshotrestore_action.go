@@ -50,59 +50,67 @@ func (p *VolumeSnapshotBackupRestoreItemActionV2) Execute(input *velero.RestoreI
 
 	operationID := ""
 
-	// create VSR per VSB
-	vsr := datamoverv1alpha1.VolumeSnapshotRestore{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "vsr-",
-			Namespace:    vsb.Namespace,
-			Labels: map[string]string{
-				util.RestoreNameLabel:           input.Restore.Name,
-				util.BackupNameLabel:            vsb.Labels[util.BackupNameLabel],
-				util.PersistentVolumeClaimLabel: vsb.Annotations[util.VolumeSnapshotMoverSourcePVCName],
-				util.VolumeSnapshotBackupLabel:  vsb.Name,
-			},
-		},
-		Spec: datamoverv1alpha1.VolumeSnapshotRestoreSpec{
-			ResticSecretRef: corev1.LocalObjectReference{
-				Name: vsb.Spec.ResticSecretRef.Name,
-			},
-			VolumeSnapshotMoverBackupref: datamoverv1alpha1.VSBRef{
-				BackedUpPVCData: datamoverv1alpha1.PVCData{
-					Name:             vsb.Annotations[util.VolumeSnapshotMoverSourcePVCName],
-					Size:             vsb.Annotations[util.VolumeSnapshotMoverSourcePVCSize],
-					StorageClassName: vsb.Annotations[util.VolumeSnapshotMoverSourcePVCStorageClass],
-				},
-				ResticRepository:        vsb.Annotations[util.VolumeSnapshotMoverResticRepository],
-				VolumeSnapshotClassName: vsb.Annotations[util.VolumeSnapshotMoverVolumeSnapshotClass],
-			},
-			ProtectedNamespace: vsb.Spec.ProtectedNamespace,
-		},
-	}
-
-	vsrClient, err := util.GetVolumeSnapshotMoverClient()
+	// check if VolumeSnaphotRestore CR exists for VolumeSnaoshotBackup
+	VSRExists, err := util.VSRExistsForVSB(&vsb, p.Log)
 	if err != nil {
 		return nil, err
 	}
 
-	// if namespace mapping is specified
-	if val, ok := input.Restore.Spec.NamespaceMapping[vsr.GetNamespace()]; ok {
-		vsr.SetNamespace(val)
-	}
+	if !VSRExists {
+		// create VSR per VSB
+		vsr := datamoverv1alpha1.VolumeSnapshotRestore{
+			ObjectMeta: metav1.ObjectMeta{
+				GenerateName: "vsr-",
+				Namespace:    vsb.Namespace,
+				Labels: map[string]string{
+					util.RestoreNameLabel:           input.Restore.Name,
+					util.BackupNameLabel:            vsb.Labels[util.BackupNameLabel],
+					util.PersistentVolumeClaimLabel: vsb.Annotations[util.VolumeSnapshotMoverSourcePVCName],
+					util.VolumeSnapshotBackupLabel:  vsb.Name,
+				},
+			},
+			Spec: datamoverv1alpha1.VolumeSnapshotRestoreSpec{
+				ResticSecretRef: corev1.LocalObjectReference{
+					Name: vsb.Spec.ResticSecretRef.Name,
+				},
+				VolumeSnapshotMoverBackupref: datamoverv1alpha1.VSBRef{
+					BackedUpPVCData: datamoverv1alpha1.PVCData{
+						Name:             vsb.Annotations[util.VolumeSnapshotMoverSourcePVCName],
+						Size:             vsb.Annotations[util.VolumeSnapshotMoverSourcePVCSize],
+						StorageClassName: vsb.Annotations[util.VolumeSnapshotMoverSourcePVCStorageClass],
+					},
+					ResticRepository:        vsb.Annotations[util.VolumeSnapshotMoverResticRepository],
+					VolumeSnapshotClassName: vsb.Annotations[util.VolumeSnapshotMoverVolumeSnapshotClass],
+				},
+				ProtectedNamespace: vsb.Spec.ProtectedNamespace,
+			},
+		}
 
-	err = vsrClient.Create(context.Background(), &vsr)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error creating volumesnapshotrestore CR")
-	}
-	p.Log.Infof("[vsb-restore] vsr created: %s", vsr.Name)
+		vsrClient, err := util.GetVolumeSnapshotMoverClient()
+		if err != nil {
+			return nil, err
+		}
 
-	// fetch the VSR so we get the name of the VSR as we use generate name for VSR CR creation
-	err = vsrClient.Get(context.Background(), client.ObjectKey{Namespace: vsr.Namespace, Name: vsr.Name}, &vsr)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error fetching volumesnapshotrestore CR for suppyling operationID")
-	}
+		// if namespace mapping is specified
+		if val, ok := input.Restore.Spec.NamespaceMapping[vsr.GetNamespace()]; ok {
+			vsr.SetNamespace(val)
+		}
 
-	// operationID for our datamover usecase is VSR NamespacedName which will unique per operation
-	operationID = vsr.Namespace + "/" + vsr.Name
+		err = vsrClient.Create(context.Background(), &vsr)
+		if err != nil {
+			return nil, errors.Wrapf(err, "error creating volumesnapshotrestore CR")
+		}
+		p.Log.Infof("[vsb-restore] vsr created: %s", vsr.Name)
+
+		// fetch the VSR so we get the name of the VSR as we use generate name for VSR CR creation
+		err = vsrClient.Get(context.Background(), client.ObjectKey{Namespace: vsr.Namespace, Name: vsr.Name}, &vsr)
+		if err != nil {
+			return nil, errors.Wrapf(err, "error fetching volumesnapshotrestore CR for suppyling operationID")
+		}
+
+		// operationID for our datamover usecase is VSR NamespacedName which will unique per operation
+		operationID = vsr.Namespace + "/" + vsr.Name
+	}
 
 	p.Log.Info("Returning from VolumeSnapshotBackupRestoreItemActionV2")
 
