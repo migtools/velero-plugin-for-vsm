@@ -59,6 +59,7 @@ func (p *VolumeSnapshotBackupRestoreItemActionV2) Execute(input *velero.RestoreI
 				util.RestoreNameLabel:           input.Restore.Name,
 				util.BackupNameLabel:            vsb.Labels[util.BackupNameLabel],
 				util.PersistentVolumeClaimLabel: vsb.Annotations[util.VolumeSnapshotMoverSourcePVCName],
+				util.VolumeSnapshotBackupLabel:  vsb.Name,
 			},
 		},
 		Spec: datamoverv1alpha1.VolumeSnapshotRestoreSpec{
