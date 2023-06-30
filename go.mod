@@ -1,6 +1,6 @@
 module github.com/vmware-tanzu/velero-plugin-for-csi
 
-go 1.17
+go 1.20
 
 require (
 	github.com/backube/volsync v0.7.0

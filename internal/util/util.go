@@ -610,13 +610,26 @@ func WaitForDataMoverRestoreToComplete(restoreName string, log logrus.FieldLogge
 	return nil
 }
 
-func VSBHasVSBackupName(backup *velerov1api.Backup, snapCont *snapshotv1api.VolumeSnapshotContent, log logrus.FieldLogger) bool {
+func VSCBelongsToBackup(backup *velerov1api.Backup, snapCont *snapshotv1api.VolumeSnapshotContent, log logrus.FieldLogger) bool {
 
 	// compare backup name on label with current backup name
 	VSCBackupName := snapCont.Labels[BackupNameLabel]
 	currentBackupName := backup.Name
 
 	if VSCBackupName != currentBackupName {
+		return false
+	}
+
+	return true
+}
+
+func VSBBelongsToBackup(backupName string, vsb *datamoverv1alpha1.VolumeSnapshotBackup, log logrus.FieldLogger) bool {
+
+	// compare backup name on label with current backup name
+	VSBBackupName := vsb.Labels[BackupNameLabel]
+	currentBackupName := backupName
+
+	if VSBBackupName != currentBackupName {
 		return false
 	}
 
