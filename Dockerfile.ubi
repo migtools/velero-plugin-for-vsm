@@ -1,5 +1,4 @@
 FROM quay.io/konveyor/builder:latest AS builder
-ENV APP_ROOT=/opt/app-root
 ENV GOPATH=$APP_ROOT
 COPY . $APP_ROOT/src/velero-plugin-for-vsm
 WORKDIR $APP_ROOT/src/velero-plugin-for-vsm
