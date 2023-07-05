@@ -50,7 +50,15 @@ func (p *VolumeSnapshotBackupRestoreItemActionV2) Execute(input *velero.RestoreI
 
 	operationID := ""
 
-	// check if VolumeSnaphotRestore CR exists for VolumeSnaoshotBackup
+	// check the VSB has the same backup name from label as the current backup
+	isVSBForCurrentBackup := util.VSBBelongsToBackup(input.Restore.Spec.BackupName, &vsb, p.Log)
+
+	if !isVSBForCurrentBackup {
+		p.Log.Infof("unrelated volumesnapshotbackup found %s, skipping datamover restore for this VSB", vsb.Name)
+		return velero.NewRestoreItemActionExecuteOutput(input.Item).WithoutRestore(), nil
+	}
+
+	// check if VolumeSnaphotRestore CR exists for VolumeSnapshotBackup
 	VSRExists, err := util.VSRExistsForVSB(&vsb, p.Log)
 	if err != nil {
 		return nil, err

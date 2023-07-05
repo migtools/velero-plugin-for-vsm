@@ -36,6 +36,14 @@ func (p *VolumeSnapshotBackupBackupItemAction) Execute(item runtime.Unstructured
 	}
 	p.Log.Infof("Converted Item to VSB: %v", vsb)
 
+	// check the VSB has the same backup name from label as the current backup
+	isVSBForCurrentBackup := util.VSBBelongsToBackup(backup.Name, &vsb, p.Log)
+
+	if !isVSBForCurrentBackup {
+		p.Log.Infof("unrelated volumesnapshotbackup found %s, skipping datamover backup for this VSB", vsb.Name)
+		return item, nil, nil
+	}
+
 	vsbNew, err := util.GetVolumeSnapshotbackupWithStatusData(vsb.Namespace, vsb.Name, p.Log)
 	if err != nil {
 		return nil, nil, errors.WithStack(err)
