@@ -70,12 +70,12 @@ func (p *VolumeSnapshotContentBackupItemActionV2) Execute(item runtime.Unstructu
 	if util.DataMoverCase() {
 
 		// check the VSC has the same backup name from label as the current backup
-		isVSForCurrentBackup := util.VSBHasVSBackupName(backup, &snapCont, p.Log)
+		isVSCForCurrentBackup := util.VSCBelongsToBackup(backup, &snapCont, p.Log)
 
-		if !isVSForCurrentBackup {
-			p.Log.Warnf("stale volumesnapshot found %s", snapCont.Spec.VolumeSnapshotRef.Name)
+		if !isVSCForCurrentBackup {
+			p.Log.Infof("unrelated volumesnapshotcontent found %s, skipping VSB creation", snapCont.Spec.VolumeSnapshotRef.Name)
 
-			return nil, nil, "", nil, nil
+			return item, nil, "", nil, nil
 		}
 
 		_, snapshotClient, err := util.GetClients()

@@ -15,7 +15,7 @@
 # The binary to build (just the basename).
 BIN ?= velero-plugin-for-vsm
 
-BUILD_IMAGE ?= golang:1.17-stretch
+BUILD_IMAGE ?= golang:1.20-bullseye
 
 REGISTRY ?= velero
 IMAGE_NAME ?= $(REGISTRY)/velero-plugin-for-vsm
