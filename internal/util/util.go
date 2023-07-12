@@ -311,6 +311,13 @@ func GetVolumeSnapshotbackupWithStatusData(volumeSnapshotbackupNS string, volume
 		}
 
 		if len(vsb.Status.Conditions) == 0 {
+			if vsb.Status.Phase == datamoverv1alpha1.SnapMoverBackupPhaseFailed ||
+				vsb.Status.Phase == datamoverv1alpha1.SnapMoverBackupPhasePartiallyFailed {
+				return false, errors.Errorf("volumesnapshotbackup %v has failed status", vsb.Name)
+			}
+			if vsb.Status.Phase == datamoverv1alpha1.SnapMoverBackupPhaseCompleted {
+				return false, errors.Errorf("volumesnapshotbackup %v completed without conditions", vsb.Name)
+			}
 			log.Infof("Waiting for volumesnapshotbackup %s to have conditions. Retrying in %ds", vsb.Name, interval/time.Second)
 			return false, nil
 		}
