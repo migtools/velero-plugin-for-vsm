@@ -457,12 +457,21 @@ func VSRExistsForVSB(vsb *datamoverv1alpha1.VolumeSnapshotBackup, log logrus.Fie
 	return false, nil
 }
 
-//Waits for volumesnapshotcontent to be in ready state
+// Waits for volumesnapshotcontent to be in ready state
 func WaitForVolumeSnapshotContentToBeReady(snapCont snapshotv1api.VolumeSnapshotContent, snapshotClient snapshotter.SnapshotV1Interface, log logrus.FieldLogger) (bool, error) {
-	// We'll wait 10m for the VSC to be reconciled polling every 5s
-	timeout := 10 * time.Minute
+	timeoutValue := "10m"
 	interval := 5 * time.Second
-	err := wait.PollImmediate(interval, timeout, func() (bool, error) {
+
+	if len(os.Getenv(DatamoverTimeout)) > 0 {
+		timeoutValue = os.Getenv(DatamoverTimeout)
+	}
+
+	timeout, err := time.ParseDuration(timeoutValue)
+	if err != nil {
+		return false, errors.Wrapf(err, "error parsing the datamover timout")
+	}
+
+	err = wait.PollImmediate(interval, timeout, func() (bool, error) {
 		updatedVSC, err := snapshotClient.VolumeSnapshotContents().Get(context.TODO(), snapCont.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, errors.Wrapf(err, fmt.Sprintf("failed to get volumesnapshotcontent %s", updatedVSC.Name))
