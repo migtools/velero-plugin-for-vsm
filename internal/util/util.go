@@ -295,7 +295,7 @@ func GetVolumeSnapshotbackupWithStatusData(volumeSnapshotbackupNS string, volume
 
 	timeout, err := time.ParseDuration(timeoutValue)
 	if err != nil {
-		return vsb, errors.Wrapf(err, "error parsing the datamover timout")
+		return vsb, errors.Wrapf(err, "error parsing the datamover timeout")
 	}
 	interval := 5 * time.Second
 
@@ -361,7 +361,7 @@ func GetVolumeSnapshotRestoreWithStatusData(restoreName string, PVCName string, 
 
 	timeout, err := time.ParseDuration(timeoutValue)
 	if err != nil {
-		return vsrList, errors.Wrapf(err, "error parsing the datamover timout")
+		return vsrList, errors.Wrapf(err, "error parsing the datamover timeout")
 	}
 	interval := 5 * time.Second
 
@@ -468,7 +468,7 @@ func WaitForVolumeSnapshotContentToBeReady(snapCont snapshotv1api.VolumeSnapshot
 
 	timeout, err := time.ParseDuration(timeoutValue)
 	if err != nil {
-		return false, errors.Wrapf(err, "error parsing the datamover timout")
+		return false, errors.Wrapf(err, "error parsing the datamover timeout")
 	}
 
 	err = wait.PollImmediate(interval, timeout, func() (bool, error) {
@@ -549,7 +549,7 @@ func CheckIfVolumeSnapshotRestoresAreComplete(ctx context.Context, volumesnapsho
 	}
 	timeout, err := time.ParseDuration(timeoutValue)
 	if err != nil {
-		return errors.Wrapf(err, "error parsing datamover timout")
+		return errors.Wrapf(err, "error parsing datamover timeout")
 	}
 	interval := 5 * time.Second
 
@@ -665,7 +665,7 @@ func WaitForVolumeSnapshotSourceToBeReady(volSnap *snapshotv1api.VolumeSnapshot,
 	}
 	timeout, err := time.ParseDuration(timeoutValue)
 	if err != nil {
-		return errors.Wrapf(err, "error parsing datamover timout")
+		return errors.Wrapf(err, "error parsing datamover timeout")
 	}
 	interval := 5 * time.Second
 
