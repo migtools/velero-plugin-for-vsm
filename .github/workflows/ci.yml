@@ -1,0 +1,34 @@
+name: Velero-plugin-for-vsm - '$ make test' target
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: [ '1.20' ]
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup Go Environment ${{ matrix.go-version }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Go Version check
+        run: go version
+
+      - name: Install Go dependencies
+        run: go get .
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Run Tests
+        run: go test -timeout 30s -v -cover ./...
